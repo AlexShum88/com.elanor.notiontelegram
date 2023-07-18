@@ -11,11 +11,12 @@ import kotlinx.coroutines.delay
 
 
 fun main() {
-    val notionDB = "0385d4fffa2c4a90ab1cee309784be3d"
-    val telegramKey = "6186829942:AAHW5h37n3hdTVfeadICFB_Lrsi7xZlYj6M"
-    val secret = "secret_p8dxjKNdTlYAQ4lPSWH7iue3XZiaoFLjsfDjpqt7AuO"
+    val notionDB = System.getenv("notion")
+    val telegramKey = System.getenv("telegram")
+    val secret = System.getenv("secret")
+    val port = System.getenv("PORT").toInt()
 
-    embeddedServer(CIO, port = 8080) {
+    embeddedServer(CIO, port = port) {
         val tBot = TBot(telegramKey)
         val bot = Bot(tBot, notionDB, secret)
 
