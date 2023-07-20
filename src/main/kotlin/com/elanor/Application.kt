@@ -11,9 +11,9 @@ import kotlinx.coroutines.delay
 
 
 fun main() {
-    val notionDB = System.getenv("notion")
-    val telegramKey = System.getenv("telegram")
-    val secret = System.getenv("secret")
+    val notionDB = System.getenv("NOTION")
+    val telegramKey = System.getenv("TELEGRAM")
+    val secret = System.getenv("SECRET")
     val port = System.getenv("PORT").toInt()
 
     embeddedServer(CIO, port = port) {
@@ -29,7 +29,7 @@ fun main() {
                 }
             }
             get("/telegram") {
-                while (true){
+                while (true) {
                     delay(100000)
                     tBot.getUpdates()
                 }
