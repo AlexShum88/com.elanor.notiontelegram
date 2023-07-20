@@ -33,7 +33,7 @@ class Bot(
     suspend fun run(telbot: TBot) {
         val pages = findPagesAfterLastCheck(lastTime)
         checkUsersInUpdate(pages).forEach { telbot.sendMessage(it.first, it.second.toString()) }
-        lastTime = Instant.now().minusSeconds(100).toString()
+        lastTime = Instant.now().toString()
         println("run of run ended")
     }
 

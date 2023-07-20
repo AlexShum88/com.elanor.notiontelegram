@@ -24,13 +24,13 @@ fun main() {
         routing {
             get("/") {
                 while (true) {
-                    delay(10000)
+                    delay(100000)
                     bot.run(tBot)
                 }
             }
             get("/telegram") {
                 while (true){
-                    delay(10000)
+                    delay(100000)
                     tBot.getUpdates()
                 }
             }
