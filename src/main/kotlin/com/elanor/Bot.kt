@@ -37,7 +37,7 @@ class Bot(
         println("run of run ended")
     }
 
-    fun checkUsersInUpdate(update: List<Page>): List<Pair<Long, List<String>>> {
+    fun checkUsersInUpdate(update: List<Page<Properties.MainProperties>>): List<Pair<Long, List<String>>> {
         val res = mutableListOf<Pair<Long, List<String>>>()
         gamers.forEach { gamer ->
             update.forEach { u ->
@@ -66,13 +66,13 @@ class Bot(
 
         }
 //        println(response.call.body<String>().toString())
-        val pageId = response.call.body<NotionPage>().results.first().id
+        val pageId = response.call.body<NotionPage<Properties.MainProperties>>().results.first().id
 
         println(pageId)
         return pageId
     }
 
-    suspend fun findPagesAfterLastCheck(time: String): List<Page> {
+    suspend fun findPagesAfterLastCheck(time: String): List<Page<Properties.MainProperties>> {
         val response = client.post("https://api.notion.com/v1/databases/${notionDB}/query") {
 
             contentType(ContentType.Application.Json)
@@ -86,7 +86,7 @@ class Bot(
 
         }
         println(response.call.body<String>())
-        return response.call.body<NotionPage>().results
+        return response.call.body<NotionPage<Properties.MainProperties>>().results
     }
 
 }
@@ -110,7 +110,7 @@ data class filterByLastDate(
 
 @Serializable
 data class lastEditedTime(
-    val after: String
+    val on_or_after: String
 )
 
 @Serializable

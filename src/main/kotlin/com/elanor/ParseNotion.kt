@@ -6,13 +6,13 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 @Serializable
-data class NotionPage(
+data class NotionPage<out T: Properties>(
     val `object`: String,
-    val results: List<Page>
+    val results: List<Page<T>>
 )
 
 @Serializable
-data class Page(
+data class Page<out T: Properties>(
     val `object`: String,
     val id: String,
     val created_time: String,
@@ -23,7 +23,7 @@ data class Page(
     val icon: String?,
     val parent: Database,
     val archived: Boolean,
-    val properties: Properties,
+    val properties: T,
     val url: String,
     val public_url: String?
 )
@@ -32,7 +32,7 @@ data class Page(
 data class User(
     val `object`: String,
     val id: String,
-    val name: String ="",
+    val name: String = "",
     val avatar_url: String = "",
     val type: String = "",
     val person: Person? = null
@@ -50,15 +50,26 @@ data class Database(
 )
 
 @Serializable
-data class Properties(
-    val Tags: MultiSelect,
-    val assigned_to: People,
-    val Date: Date,
-    val description: RichText,
-    val Status: Status,
-    val to_specialist: MultiSelect,
-    val Name: Title
-)
+sealed interface Properties {
+
+    @Serializable
+    data class MainProperties(
+        val Tags: MultiSelect,
+        val assigned_to: People,
+        val Date: Date,
+        val description: RichText,
+        val Status: Status,
+        val to_specialist: MultiSelect,
+        val Name: Title
+    ) : Properties
+
+    @Serializable
+    data class UserProperties(
+        val name: RichText,
+        val chat_id: Title,
+        val last_check: Date
+    ) : Properties
+}
 
 @Serializable
 data class Title(
@@ -123,17 +134,15 @@ data class Text(
     val content: String = "",
     val link: String? = "",
 )
+
 @Serializable
-data class ForTitle (
+data class ForTitle(
     val type: String,
     val text: Text,
     val annotations: Annotations,
     val plain_text: String = "",
     val href: String = ""
 )
-
-
-
 
 
 @Serializable
