@@ -26,8 +26,26 @@ fun Application.module() {
     val tBot = TBot(telegramKey)
     val bot = Bot(tBot, notionDB, secret)
     val notionBot = NotionBot(notionDB, secret, usersDB)
-    launch { notionBot.retrieveUsers() }
-
+    launch {
+        notionBot.retrieveUsers()
+        notionBot.users.forEach { user ->
+            launch {
+                while (true) {
+                    delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
+                    println(user.notionName)
+                    notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
+                        println("I m READY TO SENT MESSAGE TO ${user.chatId}")
+                        tBot.sendMessage(
+                            user.chatId.toLong(),
+                            it.properties.Name.title.map { it.plain_text }.first() +
+                                    "\n" +
+                                    it.properties.Status.status.name
+                        )
+                    }
+                }
+            }
+        }
+    }
     routing {
         get("/") {
 //            launch {
@@ -39,17 +57,13 @@ fun Application.module() {
 //            }
 //            NotionBot(notionDB, secret, usersDB).checkUserInNotionTable()
 
-            notionBot.users.forEach {
-                launch {
-                    notionBot.findPagesAfterLastCheckForUser(it.notionName, it.lastCheck)
-                }
-            }
+
         }
 
 
 //        get("/telegram") {
 //            while (true) {
-//                delay(pauseTelegram.toInt().toDuration(DurationUnit.MILLISECONDS))
+////                delay(pauseTelegram.toInt().toDuration(DurationUnit.MILLISECONDS))
 //                tBot.getUpdates()
 //            }
 //        }
@@ -70,6 +84,6 @@ suspend fun telegram(pause: Duration, tBot: TBot) {
 suspend fun notion(pause: Duration, tBot: TBot, bot: Bot) {
     while (true) {
         delay(pause)
-        bot.run(tBot)
+//        bot.run(tBot)
     }
 }

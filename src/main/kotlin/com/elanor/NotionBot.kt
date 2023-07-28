@@ -32,7 +32,7 @@ class NotionBot(
     data class NotionUser(
         val chatId: String = "",
         val notionName: String,
-        val lastCheck: String = "",
+        var lastCheck: String = "",
         val pageId: String = ""
     )
 
@@ -53,8 +53,8 @@ class NotionBot(
 
         return response.call.body<NotionPage<Properties.UserProperties>>().results.map {
             NotionUser(
-                notionName = it.properties.name.rich_text.toString(),
-                chatId = it.properties.chat_id.title.toString(),
+                notionName = it.properties.name.rich_text.map { it.plain_text }.first(),
+                chatId = it.properties.chat_id.title.map { it.text.content }.first(),
                 lastCheck = it.properties.last_check.date.start,
                 pageId = it.id
             )
@@ -86,8 +86,8 @@ class NotionBot(
                 },
                 {"property": "assigned_to",
                 "people": {
-                "is_not_empty": true,
-                "name": "$userName"
+                
+                "contains": "$userName"
                     }
                 }
                 ]
@@ -97,15 +97,16 @@ class NotionBot(
             )
 
         }
+        println(response.call.body<String>())
         val resp = response.call.body<NotionPage<Properties.MainProperties>>().results
-        changeTimeInDBUsers(users.filter { it.notionName == userName }.map{it.pageId}.first())
-        println(resp)
+        changeTimeInDBUsers(users.filter { it.notionName == userName }.map { it.pageId }.first())
+//        println(resp)
         return resp
     }
 
-    suspend fun changeTimeInDBUsers(pageID: String){
+    suspend fun changeTimeInDBUsers(pageID: String) {
         val time = Instant.now()
-        val response = client.patch("https://api.notion.com/v1/pages/${pageID}"){
+        val response = client.patch("https://api.notion.com/v1/pages/${pageID}") {
             contentType(ContentType.Application.Json)
             header(HttpHeaders.Accept, ContentType.Application.Json)
             header("Notion-Version", "2022-06-28")
@@ -123,6 +124,8 @@ class NotionBot(
                 """.trimIndent()
             )
         }
-        println("status of change time on user DB ${ response.status }")
+        println("status of change time on user DB ${response.status}")
+        if (response.status.value == 200) users.filter { it.pageId == pageID }
+            .forEach { it.lastCheck = time.toString() }
     }
 }

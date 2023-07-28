@@ -40,7 +40,7 @@ class TBot(val token: String) {
 
     suspend fun checkCommand(update: Update){
         when(update.message?.text){
-            "/start" -> sendMessage(update.message.chat.id, "please print /user {your name in notion}")
+            "/start" -> sendMessage(update.message.chat.id, "${update.message.chat.id}")
             else -> checkForUserName(update)
         }
         offset = update.update_id+1
@@ -102,7 +102,8 @@ data class Message(
 data class TUser(
     val id: Long,
     val is_bot: Boolean,
-    val first_name: String,
+    val first_name: String? = null,
+    val last_name: String? = null,
     val username: String? = null,
     val language_code: String? = null
 )
@@ -113,6 +114,7 @@ data class TChat(
     val type: String,
     val username: String? = null,
     val first_name: String? = null,
+    val last_name: String? = null,
 )
 
 @Serializable
