@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -26,28 +27,19 @@ fun Application.module() {
     val tBot = TBot(telegramKey)
     val bot = Bot(tBot, notionDB, secret)
     val notionBot = NotionBot(notionDB, secret, usersDB)
-    while (true) {
-        launch {
-            notionBot.retrieveUsers()
-            notionBot.users.forEach { user ->
-                launch {
-                    while (true) {
-                        delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
-                        println(user.notionName)
-                        notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
-                            println("I m READY TO SENT MESSAGE TO ${user.chatId}")
-                            tBot.sendMessage(
-                                user.chatId.toLong(),
-                                it.properties.Name.title.map { it.plain_text }.first() +
-                                        "\n" +
-                                        it.properties.Status.status.name
-                            )
-                        }
-                    }
-                }
-            }
+
+    launch {
+        try {
+            mainWorker(notionBot, pauseNotion, tBot)
+        } catch (e: Exception){
+            println(e)
+        }
+        finally {
+            delay(60000)
+            mainWorker(notionBot, pauseNotion, tBot)
         }
     }
+
     routing {
         get("/") {
 //            launch {
@@ -73,6 +65,31 @@ fun Application.module() {
     configureSerialization()
     configureSecurity()
 //    configureRouting()
+}
+
+private suspend fun CoroutineScope.mainWorker(
+    notionBot: NotionBot,
+    pauseNotion: String,
+    tBot: TBot
+) {
+    notionBot.retrieveUsers()
+    notionBot.users.forEach { user ->
+        launch {
+            while (true) {
+                delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
+                println(user.notionName)
+                notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
+                    println("I m READY TO SENT MESSAGE TO ${user.chatId}")
+                    tBot.sendMessage(
+                        user.chatId.toLong(),
+                        it.properties.Name.title.map { it.plain_text }.first() +
+                                "\n" +
+                                it.properties.Status.status.name
+                    )
+                }
+            }
+        }
+    }
 }
 
 
