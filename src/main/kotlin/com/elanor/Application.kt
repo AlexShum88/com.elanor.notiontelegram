@@ -26,21 +26,23 @@ fun Application.module() {
     val tBot = TBot(telegramKey)
     val bot = Bot(tBot, notionDB, secret)
     val notionBot = NotionBot(notionDB, secret, usersDB)
-    launch {
-        notionBot.retrieveUsers()
-        notionBot.users.forEach { user ->
-            launch {
-                while (true) {
-                    delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
-                    println(user.notionName)
-                    notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
-                        println("I m READY TO SENT MESSAGE TO ${user.chatId}")
-                        tBot.sendMessage(
-                            user.chatId.toLong(),
-                            it.properties.Name.title.map { it.plain_text }.first() +
-                                    "\n" +
-                                    it.properties.Status.status.name
-                        )
+    while (true) {
+        launch {
+            notionBot.retrieveUsers()
+            notionBot.users.forEach { user ->
+                launch {
+                    while (true) {
+                        delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
+                        println(user.notionName)
+                        notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
+                            println("I m READY TO SENT MESSAGE TO ${user.chatId}")
+                            tBot.sendMessage(
+                                user.chatId.toLong(),
+                                it.properties.Name.title.map { it.plain_text }.first() +
+                                        "\n" +
+                                        it.properties.Status.status.name
+                            )
+                        }
                     }
                 }
             }
