@@ -28,17 +28,7 @@ fun Application.module() {
     val bot = Bot(tBot, notionDB, secret)
     val notionBot = NotionBot(notionDB, secret, usersDB)
 
-    launch {
-        try {
-            mainWorker(notionBot, pauseNotion, tBot)
-        } catch (e: Exception){
-            println(e)
-        }
-        finally {
-            delay(60000)
-            mainWorker(notionBot, pauseNotion, tBot)
-        }
-    }
+    run(notionBot, pauseNotion, tBot)
 
     routing {
         get("/") {
@@ -65,6 +55,23 @@ fun Application.module() {
     configureSerialization()
     configureSecurity()
 //    configureRouting()
+}
+
+private fun Application.run(
+    notionBot: NotionBot,
+    pauseNotion: String,
+    tBot: TBot
+) {
+    launch {
+        try {
+            mainWorker(notionBot, pauseNotion, tBot)
+        } catch (e: Exception) {
+            println(e.message)
+        } finally {
+            delay(60000)
+            run(notionBot, pauseNotion, tBot)
+        }
+    }
 }
 
 private suspend fun CoroutineScope.mainWorker(
