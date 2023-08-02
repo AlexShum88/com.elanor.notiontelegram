@@ -7,6 +7,7 @@ import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -67,37 +68,37 @@ private fun Application.run(
             mainWorker(notionBot, pauseNotion, tBot)
         } catch (e: Exception) {
             println(e.message)
-        } finally {
-            delay(60000)
-            run(notionBot, pauseNotion, tBot)
+            mainWorker(notionBot, pauseNotion, tBot)
         }
     }
 }
 
-private suspend fun CoroutineScope.mainWorker(
+private suspend fun Application.mainWorker(
     notionBot: NotionBot,
     pauseNotion: String,
     tBot: TBot
 ) {
     notionBot.retrieveUsers()
     notionBot.users.forEach { user ->
-        launch {
-            while (true) {
-                delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
-                println(user.notionName)
-                notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
-                    println("I m READY TO SENT MESSAGE TO ${user.chatId}")
-                    tBot.sendMessage(
-                        user.chatId.toLong(),
-                        it.properties.Name.title.map { it.plain_text }.first() +
-                                "\n" +
-                                it.properties.Status.status.name
-                    )
+
+            launch {
+                while (true) {
+                    delay(pauseNotion.toInt().toDuration(DurationUnit.MILLISECONDS))
+                    println(user.notionName)
+                    notionBot.findPagesAfterLastCheckForUser(user.notionName, user.lastCheck).forEach {
+                        println("I m READY TO SENT MESSAGE TO ${user.chatId}")
+                        tBot.sendMessage(
+                            user.chatId.toLong(),
+                            it.properties.Name.title.map { it.plain_text }.first() +
+                                    "\n" +
+                                    it.properties.Status.status.name
+                        )
+                    }
                 }
             }
         }
     }
-}
+
 
 
 suspend fun telegram(pause: Duration, tBot: TBot) {
